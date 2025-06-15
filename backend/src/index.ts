@@ -1,18 +1,18 @@
 import { WebSocketServer , WebSocket} from 'ws'
 
 interface User {
-    socket: WebSocket,
-    roomId: string
+    socket: WebSocket;
+    roomId: string;
 }
 
 let allSockets: User[] = []; // [{socket1,123},{socket2,123},{socket1,523}]
 const wss = new WebSocketServer({port: 8080});
 
-wss.on("connection", (ws) => {
-    ws.on("message", (msg) => {
+wss.on("connection", (ws: WebSocket) => {
+    ws.on("message", (msg: string) => {
         //@ts-ignore
         let parsedMessage = JSON.parse(msg);
-        if(parsedMessage.payload.type == "join")
+        if(parsedMessage.type == "join")
         {
             allSockets.push({
                 socket:ws,
@@ -20,7 +20,7 @@ wss.on("connection", (ws) => {
             })
         }
 
-        if(parsedMessage.payload.type == "chat")
+        if(parsedMessage.type == "chat")
         {
             // now since the payload is of chat, we have to broadcast the messages to everyone
             // first we have to find the current socket and also its rooom

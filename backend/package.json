@@ -5,6 +5,7 @@
   "scripts": {
     "build": "tsc -b",
     "start": "node ./dist/index.js",
+    "install":"npm install",
     "dev": " npm run build && npm run start "
   },
   "keywords": [],
@@ -12,8 +13,10 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@types/ws": "^8.18.1",
     "typescript": "^5.8.3",
     "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@types/ws": "^8.18.1"
   }
 }
