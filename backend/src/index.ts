@@ -1,48 +1,111 @@
-import { WebSocketServer , WebSocket} from 'ws'
+import { WebSocketServer, WebSocket } from 'ws'
 
 interface User {
     socket: WebSocket;
     roomId: string;
+    name: string;
+    icon: string;
 }
 
-let allSockets: User[] = []; // [{socket1,123},{socket2,123},{socket1,523}]
-const wss = new WebSocketServer({port: 8080});
+let allSockets: User[] = [];
+
+// Generate a random icon (emoji) for each user
+function generateUserIcon(): string {
+    const icons = ['👨', '👩', '👶', '👴', '👵', '👨‍💻', '👩‍💻', '🧑‍💻', '👨‍🎨', '👩‍🎨', '🧑‍🎨', '👨‍🍳', '👩‍🍳', '🧑‍🍳'];
+    return icons[Math.floor(Math.random() * icons.length)];
+}
+
+const wss = new WebSocketServer({ port: 8080 });
 
 wss.on("connection", (ws: WebSocket) => {
-    ws.on("message", (msg: string) => {
-        //@ts-ignore
-        let parsedMessage = JSON.parse(msg);
-        if(parsedMessage.type == "join")
-        {
-            allSockets.push({
-                socket:ws,
-                roomId:parsedMessage.payload.roomId
-            })
-        }
+    console.log("New WebSocket connection established");
 
-        if(parsedMessage.type == "chat")
-        {
-            // now since the payload is of chat, we have to broadcast the messages to everyone
-            // first we have to find the current socket and also its rooom
-            let currentUser = null;
-            for(let i=0;i<allSockets.length;i++)
-            {
-                if(allSockets[i].socket == ws)
-                {
-                    currentUser = allSockets[i];
-                }
-            }
-            //Now once we have found the current socket , now we have to find all the other sockets of the same/current room and send the message
-            allSockets.map((e) => {
-                if (e.roomId == currentUser?.roomId) {
-                e.socket.send(
-                    JSON.stringify({
+    ws.on("message", (msg: string) => {
+        try {
+            console.log("Received message:", msg.toString());
+            let parsedMessage = JSON.parse(msg.toString());
+            
+            if (parsedMessage.type === "join") {
+                console.log("Join request received:", parsedMessage.payload);
+                const userIcon = generateUserIcon();
+                const newUser = {
+                    socket: ws,
+                    roomId: parsedMessage.payload.roomId,
                     name: parsedMessage.payload.name,
-                    message: parsedMessage.payload.message,
-                    })
-                );
+                    icon: userIcon
+                };
+                allSockets.push(newUser);
+
+                // Notify all users in the room about the new user
+                const roomUsers = allSockets.filter(user => user.roomId === parsedMessage.payload.roomId);
+                const userCount = roomUsers.length;
+
+                console.log(`Broadcasting join message to ${userCount} users in room ${parsedMessage.payload.roomId}`);
+                roomUsers.forEach(user => {
+                    user.socket.send(JSON.stringify({
+                        type: "system",
+                        payload: {
+                            message: `${parsedMessage.payload.name} joined the room`,
+                            userCount: userCount,
+                            users: roomUsers.map(u => ({ name: u.name, icon: u.icon }))
+                        }
+                    }));
+                });
+            }
+
+            if (parsedMessage.type === "chat") {
+                const currentUser = allSockets.find(user => user.socket === ws);
+                if (!currentUser) {
+                    console.error("Chat message from unknown user");
+                    return;
                 }
-        })
-    }})
-})
+
+                console.log(`Broadcasting chat message from ${currentUser.name} in room ${currentUser.roomId}`);
+                allSockets
+                    .filter(user => user.roomId === currentUser.roomId)
+                    .forEach(user => {
+                        user.socket.send(JSON.stringify({
+                            type: "chat",
+                            payload: {
+                                name: currentUser.name,
+                                message: parsedMessage.payload.message,
+                                icon: currentUser.icon
+                            }
+                        }));
+                    });
+            }
+        } catch (e) {
+            console.error("Error processing message:", e);
+        }
+    });
+
+    ws.on("close", () => {
+        console.log("WebSocket connection closed");
+        const leavingUser = allSockets.find(user => user.socket === ws);
+        if (leavingUser) {
+            console.log(`User ${leavingUser.name} leaving room ${leavingUser.roomId}`);
+            allSockets = allSockets.filter(user => user.socket !== ws);
+            
+            // Notify remaining users in the room
+            const roomUsers = allSockets.filter(user => user.roomId === leavingUser.roomId);
+            const userCount = roomUsers.length;
+
+            console.log(`Notifying ${userCount} remaining users in room ${leavingUser.roomId}`);
+            roomUsers.forEach(user => {
+                user.socket.send(JSON.stringify({
+                    type: "system",
+                    payload: {
+                        message: `${leavingUser.name} left the room`,
+                        userCount: userCount,
+                        users: roomUsers.map(u => ({ name: u.name, icon: u.icon }))
+                    }
+                }));
+            });
+        }
+    });
+
+    ws.on("error", (error) => {
+        console.error("WebSocket error:", error);
+    });
+});
 
