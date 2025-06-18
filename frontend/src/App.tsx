@@ -1,11 +1,13 @@
 import './App.css'
 import { Chatting } from './components/Chatting'
+import { Analytics } from '@vercel/analytics/react';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
     <>
       <Chatting />
+      <Analytics />
     </>
   )
 }
