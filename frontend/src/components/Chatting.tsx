@@ -56,12 +56,12 @@ export const Chatting = () => {
 
     useEffect(() => {
         console.log("Setting up WebSocket connection...");
-        const ws = new WebSocket("ws://localhost:8080");
+        const ws = new WebSocket("wss://zenchat-1-esw7.onrender.com");
         webSocketRef.current = ws;
     
         ws.onopen = () => {
-          console.log("WebSocket connected");
-          toast.info("Connected to WebSocket");
+          console.log("WebSocket connected successfully");
+          toast.success("Connected to WebSocket server");
         };
     
         ws.onmessage = (event) => {
@@ -93,13 +93,17 @@ export const Chatting = () => {
         };
     
         ws.onerror = (error) => {
-          console.error("WebSocket error:", error);
-          toast.error("WebSocket connection error");
+          console.error("WebSocket connection error:", error);
+          toast.error("Failed to connect to WebSocket server. Please check if the server is running.");
         };
     
-        ws.onclose = () => {
-          console.log("WebSocket connection closed");
-          toast.warning("WebSocket connection closed");
+        ws.onclose = (event) => {
+          console.log("WebSocket connection closed:", event.code, event.reason);
+          if (event.code === 1006) {
+            toast.error("Connection lost. Server might be down or not supporting WebSockets.");
+          } else {
+            toast.warning("WebSocket connection closed");
+          }
         };
     
         return () => {

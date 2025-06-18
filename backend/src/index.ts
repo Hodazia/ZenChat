@@ -15,7 +15,10 @@ function generateUserIcon(): string {
     return icons[Math.floor(Math.random() * icons.length)];
 }
 
-const wss = new WebSocketServer({ port: 8080 });
+const PORT = parseInt(process.env.PORT || '8080', 10);
+const wss = new WebSocketServer({ port: PORT });
+
+console.log(`WebSocket server starting on port ${PORT}`);
 
 wss.on("connection", (ws: WebSocket) => {
     console.log("New WebSocket connection established");
