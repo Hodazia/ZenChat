@@ -1,18 +1,16 @@
 import './App.css'
 import { Chatting } from './components/Chatting'
-import { ToastContainer, toast } from 'react-toastify';
-import type { ToastPosition } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 function App() {
   return (
     <>
-      <Rdm />
       <Chatting />
     </>
   )
 }
 
+/*
 function Rdm() {
   const notify = () => {
     toast.info('🦄 Wow so easy!', {
@@ -43,5 +41,5 @@ function Rdm() {
     </div>
   );
 }
-
+*/
 export default App
