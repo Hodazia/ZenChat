@@ -7,7 +7,9 @@ function generateUserIcon() {
     const icons = ['👨', '👩', '👶', '👴', '👵', '👨‍💻', '👩‍💻', '🧑‍💻', '👨‍🎨', '👩‍🎨', '🧑‍🎨', '👨‍🍳', '👩‍🍳', '🧑‍🍳'];
     return icons[Math.floor(Math.random() * icons.length)];
 }
-const wss = new ws_1.WebSocketServer({ port: 8080 });
+const PORT = parseInt(process.env.PORT || '8080', 10);
+const wss = new ws_1.WebSocketServer({ port: PORT });
+console.log(`WebSocket server starting on port ${PORT}`);
 wss.on("connection", (ws) => {
     console.log("New WebSocket connection established");
     ws.on("message", (msg) => {
@@ -54,7 +56,81 @@ wss.on("connection", (ws) => {
                         payload: {
                             name: currentUser.name,
                             message: parsedMessage.payload.message,
-                            icon: currentUser.icon
+                            icon: currentUser.icon,
+                            timestamp: new Date().toISOString()
+                        }
+                    }));
+                });
+            }
+            if (parsedMessage.type === "typing") {
+                const currentUser = allSockets.find(user => user.socket === ws);
+                if (!currentUser) {
+                    console.error("Typing indicator from unknown user");
+                    return;
+                }
+                // Update user typing status
+                currentUser.isTyping = parsedMessage.payload.isTyping;
+                currentUser.lastSeen = new Date();
+                console.log(`${currentUser.name} is ${parsedMessage.payload.isTyping ? 'typing' : 'not typing'}`);
+                // Broadcast typing status to other users in the room
+                allSockets
+                    .filter(user => user.roomId === currentUser.roomId && user.socket !== ws)
+                    .forEach(user => {
+                    user.socket.send(JSON.stringify({
+                        type: "typing",
+                        payload: {
+                            name: currentUser.name,
+                            isTyping: parsedMessage.payload.isTyping
+                        }
+                    }));
+                });
+            }
+            if (parsedMessage.type === "reaction") {
+                const currentUser = allSockets.find(user => user.socket === ws);
+                if (!currentUser) {
+                    console.error("Reaction from unknown user");
+                    return;
+                }
+                console.log(`Reaction from ${currentUser.name}: ${parsedMessage.payload.emoji} on message ${parsedMessage.payload.messageId}`);
+                // Broadcast reaction to all users in the room
+                allSockets
+                    .filter(user => user.roomId === currentUser.roomId)
+                    .forEach(user => {
+                    user.socket.send(JSON.stringify({
+                        type: "reaction",
+                        payload: {
+                            messageId: parsedMessage.payload.messageId,
+                            emoji: parsedMessage.payload.emoji,
+                            username: currentUser.name,
+                            action: parsedMessage.payload.action || 'toggle'
+                        }
+                    }));
+                });
+            }
+            if (parsedMessage.type === "status") {
+                const currentUser = allSockets.find(user => user.socket === ws);
+                if (!currentUser) {
+                    console.error("Status update from unknown user");
+                    return;
+                }
+                // Update user status
+                currentUser.status = parsedMessage.payload.status;
+                currentUser.lastSeen = new Date();
+                console.log(`${currentUser.name} status changed to: ${parsedMessage.payload.status}`);
+                // Broadcast status update to all users in the room
+                const roomUsers = allSockets.filter(user => user.roomId === currentUser.roomId);
+                roomUsers.forEach(user => {
+                    user.socket.send(JSON.stringify({
+                        type: "system",
+                        payload: {
+                            message: `${currentUser.name} is now ${parsedMessage.payload.status}`,
+                            userCount: roomUsers.length,
+                            users: roomUsers.map(u => ({
+                                name: u.name,
+                                icon: u.icon,
+                                status: u.status || 'online',
+                                lastSeen: u.lastSeen
+                            }))
                         }
                     }));
                 });
