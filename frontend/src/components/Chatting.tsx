@@ -103,7 +103,7 @@ export const Chatting = () => {
         console.log("Setting up WebSocket connection...");
         
         //wss://zenchat-1-esw7.onrender.com
-        const ws = new WebSocket("ws://localhost:8080");
+        const ws = new WebSocket("https://ws-zen-be.onrender.com");
         webSocketRef.current = ws;
 
         ws.onopen = () => {

@@ -2,6 +2,14 @@
 
 A modern, responsive real-time chat application built with React, TypeScript, and WebSocket technology. ZENCHAT provides instant messaging capabilities with a beautiful, responsive design.
 
+## 🌐 Live URLs
+
+| Service | URL |
+|----------|-----|
+| **Frontend (React)** | [sdv]() |
+| **Backend (Web Socket)** | [https://ws-zen-be.onrender.com](https://ws-zen-be.onrender.com) |
+
+---
 
 ## ✨ Features
 
