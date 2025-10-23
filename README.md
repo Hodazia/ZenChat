@@ -6,7 +6,7 @@ A modern, responsive real-time chat application built with React, TypeScript, an
 
 | Service | URL |
 |----------|-----|
-| **Frontend (React)** | [sdv]() |
+| **Frontend (React)** | [https://zen-chat-gamma.vercel.app/](https://zen-chat-gamma.vercel.app/) |
 | **Backend (Web Socket)** | [https://ws-zen-be.onrender.com](https://ws-zen-be.onrender.com) |
 
 ---

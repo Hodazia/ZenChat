@@ -4,7 +4,7 @@ import { Copy, Send, Users, MessageSquare, LogOut, X, Smile, Search } from 'luci
 import Avatar from 'react-avatar';
 import { format } from 'date-fns';
 import "react-toastify/dist/ReactToastify.css";
-
+import notificationsound from "../assets/audio/notification-audio.mp3"
 
 interface User {
   name: string;
@@ -41,7 +41,7 @@ function getUserColor(username: string): string {
 }
 
 // Audio notification - using data URI for reliability
-const notificationSound = new Audio('src/assets/audio/notification-audio.mp3');
+const notificationSound = new Audio(notificationsound);
 notificationSound.volume = 0.3;
 
 export const Chatting = () => {
